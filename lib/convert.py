@@ -2,7 +2,7 @@
 import math
 
 from .project import unproject
-from .helpers import round_point, glom_all, length, check_if_integers, interpolation_type, create_wkt_linestring
+from .helpers import parse_house_number, round_point, glom_all, length, check_if_integers, interpolation_type, create_wkt_linestring
 
 
 # Sets the distance that the address ways should be from the main way, in feet.
@@ -17,9 +17,22 @@ ADDRESS_PULLBACK = 45
 LAT_FEET = 364613
 
 # Helper Functions
-def interpolate_along_line(coordinates, from_hnr, to_hnr, hnr):
-    """Interpolates latitude and longitude for a given house number along a line."""
-    ratio = (hnr - from_hnr) / (to_hnr - from_hnr)
+def interpolate_along_line_with_prefix_suffix(coordinates, from_hnr, to_hnr, hnr):
+    """
+    Interpolates latitude and longitude for house numbers with prefix/suffix.
+    """
+    prefix_from, numeric_from, suffix_from = parse_house_number(from_hnr)
+    prefix_to, numeric_to, suffix_to = parse_house_number(to_hnr)
+    prefix_hnr, numeric_hnr, suffix_hnr = parse_house_number(hnr)
+
+    if numeric_hnr is None or numeric_from is None or numeric_to is None:
+        raise ValueError("House number interpolation requires numeric components.")
+
+    # Ensure the prefix and suffix match for interpolation
+    if prefix_from != prefix_to or suffix_from != suffix_to:
+        raise ValueError("Mismatched prefixes or suffixes in house number interpolation.")
+
+    ratio = (numeric_hnr - numeric_from) / (numeric_to - numeric_from)
     total_length = sum(dist(coordinates[i], coordinates[i + 1]) for i in range(len(coordinates) - 1))
     target_length = ratio * total_length
     current_length = 0
@@ -35,15 +48,23 @@ def interpolate_along_line(coordinates, from_hnr, to_hnr, hnr):
 
     return coordinates[-1]  # Fallback to the last point
 
+
 def should_include(hnr, interpolationtype):
-    """Checks if a house number should be included based on interpolation type."""
+    """
+    Checks if a house number should be included based on interpolation type.
+    """
+    _, numeric_hnr, _ = parse_house_number(hnr)
+    if numeric_hnr is None:
+        return False
+
     if interpolationtype == 'all':
         return True
-    if interpolationtype == 'even' and hnr % 2 == 0:
+    if interpolationtype == 'even' and numeric_hnr % 2 == 0:
         return True
-    if interpolationtype == 'odd' and hnr % 2 != 0:
+    if interpolationtype == 'odd' and numeric_hnr % 2 != 0:
         return True
     return False
+
 
 def calculate_centroid(segment):
     """
@@ -98,7 +119,6 @@ def addressways(waylist, nodelist, first_way_id):
             left = check_if_integers([lfromadd, ltoadd])
 
             if not left and not right:
-                print(tags)
                 continue
 
             first = True
@@ -206,24 +226,14 @@ def addressways(waylist, nodelist, first_way_id):
                 linestr = create_wkt_linestring(rsegment)
                 r_coordinates = [point[1] for point in rsegment]
                 if interpolationtype:
-                    for hnr in range(int(rfromadd), int(rtoadd) + 1):
-                        if should_include(hnr, interpolationtype):
-                            lat, lon = interpolate_along_line(r_coordinates, int(rfromadd), int(rtoadd), hnr)
+                    for hnr in range(parse_house_number(rfromadd)[1], parse_house_number(rtoadd)[1] + 1):
+                        full_hnr = f"{parse_house_number(rfromadd)[0]}{hnr}{parse_house_number(rfromadd)[2]}"
+                        if should_include(full_hnr, interpolationtype):
+                            lat, lon = interpolate_along_line_with_prefix_suffix(
+                                r_coordinates, rfromadd, rtoadd, full_hnr
+                            )
                             output.append({
-                                'hnr': hnr,
-                                'lat': round(lat, 6),
-                                'lon': round(lon, 6),
-                                'street': name,
-                                'city': county,
-                                'state': state,
-                                'postcode': zipr,
-                                'geometry': linestr
-                            })
-                else:
-                    lat, lon = calculate_centroid(r_coordinates)
-                    print(tags)
-                    output.append({
-                                'hnr': rfromadd if rfromadd else rtoadd ,
+                                'hnr': full_hnr,
                                 'lat': round(lat, 6),
                                 'lon': round(lon, 6),
                                 'street': name,
@@ -239,24 +249,14 @@ def addressways(waylist, nodelist, first_way_id):
                 linestr = create_wkt_linestring(lsegment)
                 l_coordinates = [point[1] for point in lsegment]
                 if interpolationtype:
-                    for hnr in range(int(lfromadd), int(ltoadd) + 1):
-                        if should_include(hnr, interpolationtype):
-                            lat, lon = interpolate_along_line(l_coordinates, int(lfromadd), int(ltoadd), hnr)
+                    for hnr in range(parse_house_number(lfromadd)[1], parse_house_number(ltoadd)[1] + 1):
+                        full_hnr = f"{parse_house_number(lfromadd)[0]}{hnr}{parse_house_number(lfromadd)[2]}"
+                        if should_include(full_hnr, interpolationtype):
+                            lat, lon = interpolate_along_line_with_prefix_suffix(
+                                l_coordinates, lfromadd, ltoadd, full_hnr
+                            )
                             output.append({
-                                'hnr': hnr,
-                                'lat': round(lat, 6),
-                                'lon': round(lon, 6),
-                                'street': name,
-                                'city': county,
-                                'state': state,
-                                'postcode': zipl,
-                                'geometry': linestr
-                            })
-                else:
-                    lat, lon = calculate_centroid(l_coordinates)
-                    print(tags)
-                    output.append({
-                                'hnr': lfromadd if lfromadd else ltoadd,
+                                'hnr': full_hnr,
                                 'lat': round(lat, 6),
                                 'lon': round(lon, 6),
                                 'street': name,

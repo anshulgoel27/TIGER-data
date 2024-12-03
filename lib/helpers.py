@@ -1,4 +1,23 @@
 import math
+import re
+
+def parse_house_number(hnr):
+    """
+    Parses a house number into prefix, numeric, and suffix parts.
+    Examples:
+      - "A10B" -> ("A", 10, "B")
+      - "10B" -> ("", 10, "B")
+      - "A10" -> ("A", 10, "")
+      - "10" -> ("", 10, "")
+    """
+    match = re.match(r"^(\D*)(\d+)(\D*)$", str(hnr))
+    if match:
+        prefix = match.group(1)
+        numeric = int(match.group(2))
+        suffix = match.group(3)
+        return prefix, numeric, suffix
+    return None, None, None
+
 
 def round_point( point, accuracy=8 ):
     """
@@ -126,7 +145,8 @@ def check_if_integers(numbers):
         if not number:
             return False
         try:
-            int(number)
+            _, hnr, _ = parse_house_number(number)
+            int(hnr)
         except ValueError:
             print("Non integer address: %s" % number)
             return False
