@@ -162,11 +162,13 @@ def interpolation_type(this_from, this_to, other_from, other_to):
         return None
 
     if this_from > this_to:
+        print("Error range {} - {}", this_from , this_to)
         return None
     
     if other_from is not None and other_to is not None:
         
         if other_from > other_to:
+            print("Error range {} - {}", this_from , this_to)
             return None
         
         if (int(this_from) % 2) == 0 and (int(this_to) % 2) == 0:
