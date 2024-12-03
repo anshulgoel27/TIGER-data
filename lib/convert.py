@@ -235,6 +235,9 @@ def addressways(waylist, nodelist, first_way_id):
                                 "postcode": zipr,
                                 "geometry": linestr,
                             })
+                else:
+                    print("right")
+                    print(tags)
 
             if left:
                 interpolationtype = interpolation_type(parsed_lfromadd[1], parsed_ltoadd[1], parsed_rfromadd[1], parsed_rtoadd[1])
@@ -258,6 +261,9 @@ def addressways(waylist, nodelist, first_way_id):
                                 "postcode": zipl,
                                 "geometry": linestr,
                             })
+                else:
+                    print("left")
+                    print(tags)
 
     return output
 
