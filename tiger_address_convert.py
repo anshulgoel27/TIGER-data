@@ -34,9 +34,9 @@ def shape_to_csv(shp_filename, csv_filename):
 
     print("writing %s" % csv_filename)
     fieldnames = [
-        'from',
-        'to',
-        'interpolation',
+        'hnr',
+        'lat',
+        'lon',
         'street',
         'city',
         'state',

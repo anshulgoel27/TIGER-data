@@ -1,6 +1,6 @@
 
 import math
-
+import re
 from .project import unproject
 from .helpers import round_point, glom_all, length, check_if_integers, interpolation_type, create_wkt_linestring
 
@@ -16,10 +16,40 @@ ADDRESS_PULLBACK = 45
 # The approximate number of feet in one degree of latitude
 LAT_FEET = 364613
 
+def parse_house_number(hnr):
+    """
+    Parses a house number into prefix, numeric, and suffix parts.
+    Examples:
+      - "A10B" -> ("A", 10, "B")
+      - "10B" -> ("", 10, "B")
+      - "A10" -> ("A", 10, "")
+      - "10" -> ("", 10, "")
+    """
+    match = re.match(r"^(\D*)(\d+)(\D*)$", str(hnr))
+    if match:
+        prefix = match.group(1)
+        numeric = int(match.group(2))
+        suffix = match.group(3)
+        return prefix, numeric, suffix
+    return None, None, None
+
 # Helper Functions
-def interpolate_along_line(coordinates, from_hnr, to_hnr, hnr):
-    """Interpolates latitude and longitude for a given house number along a line."""
-    ratio = (hnr - from_hnr) / (to_hnr - from_hnr)
+def interpolate_along_line_with_prefix_suffix(coordinates, from_hnr, to_hnr, hnr):
+    """
+    Interpolates latitude and longitude for house numbers with prefix/suffix.
+    """
+    prefix_from, numeric_from, suffix_from = parse_house_number(from_hnr)
+    prefix_to, numeric_to, suffix_to = parse_house_number(to_hnr)
+    prefix_hnr, numeric_hnr, suffix_hnr = parse_house_number(hnr)
+
+    if numeric_hnr is None or numeric_from is None or numeric_to is None:
+        raise ValueError("House number interpolation requires numeric components.")
+
+    # Ensure the prefix and suffix match for interpolation
+    if prefix_from != prefix_to or suffix_from != suffix_to:
+        raise ValueError("Mismatched prefixes or suffixes in house number interpolation.")
+
+    ratio = (numeric_hnr - numeric_from) / (numeric_to - numeric_from)
     total_length = sum(dist(coordinates[i], coordinates[i + 1]) for i in range(len(coordinates) - 1))
     target_length = ratio * total_length
     current_length = 0
@@ -35,15 +65,23 @@ def interpolate_along_line(coordinates, from_hnr, to_hnr, hnr):
 
     return coordinates[-1]  # Fallback to the last point
 
+
 def should_include(hnr, interpolationtype):
-    """Checks if a house number should be included based on interpolation type."""
+    """
+    Checks if a house number should be included based on interpolation type.
+    """
+    _, numeric_hnr, _ = parse_house_number(hnr)
+    if numeric_hnr is None:
+        return False
+
     if interpolationtype == 'all':
         return True
-    if interpolationtype == 'even' and hnr % 2 == 0:
+    if interpolationtype == 'even' and numeric_hnr % 2 == 0:
         return True
-    if interpolationtype == 'odd' and hnr % 2 != 0:
+    if interpolationtype == 'odd' and numeric_hnr % 2 != 0:
         return True
     return False
+
 
 def dist(p1, p2):
     """Calculates the distance between two points."""
@@ -183,11 +221,14 @@ def addressways(waylist, nodelist, first_way_id):
                 interpolationtype = interpolation_type(rfromadd, rtoadd, lfromadd, ltoadd)
                 linestr = create_wkt_linestring(rsegment)
                 r_coordinates = [point[1] for point in rsegment]
-                for hnr in range(int(rfromadd), int(rtoadd) + 1):
-                    if should_include(hnr, interpolationtype):
-                        lat, lon = interpolate_along_line(r_coordinates, int(rfromadd), int(rtoadd), hnr)
+                for hnr in range(parse_house_number(rfromadd)[1], parse_house_number(rtoadd)[1] + 1):
+                    full_hnr = f"{parse_house_number(rfromadd)[0]}{hnr}{parse_house_number(rfromadd)[2]}"
+                    if should_include(full_hnr, interpolationtype):
+                        lat, lon = interpolate_along_line_with_prefix_suffix(
+                            r_coordinates, rfromadd, rtoadd, full_hnr
+                        )
                         output.append({
-                            'hnr': hnr,
+                            'hnr': full_hnr,
                             'lat': round(lat, 6),
                             'lon': round(lon, 6),
                             'street': name,
@@ -202,11 +243,14 @@ def addressways(waylist, nodelist, first_way_id):
                 interpolationtype = interpolation_type(lfromadd, ltoadd, rfromadd, rtoadd)
                 linestr = create_wkt_linestring(lsegment)
                 l_coordinates = [point[1] for point in lsegment]
-                for hnr in range(int(lfromadd), int(ltoadd) + 1):
-                    if should_include(hnr, interpolationtype):
-                        lat, lon = interpolate_along_line(l_coordinates, int(lfromadd), int(ltoadd), hnr)
+                for hnr in range(parse_house_number(lfromadd)[1], parse_house_number(ltoadd)[1] + 1):
+                    full_hnr = f"{parse_house_number(lfromadd)[0]}{hnr}{parse_house_number(lfromadd)[2]}"
+                    if should_include(full_hnr, interpolationtype):
+                        lat, lon = interpolate_along_line_with_prefix_suffix(
+                            l_coordinates, lfromadd, ltoadd, full_hnr
+                        )
                         output.append({
-                            'hnr': hnr,
+                            'hnr': full_hnr,
                             'lat': round(lat, 6),
                             'lon': round(lon, 6),
                             'street': name,
