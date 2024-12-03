@@ -221,7 +221,7 @@ def addressways(waylist, nodelist, first_way_id):
                 else:
                     lat, lon = calculate_centroid(r_coordinates)
                     output.append({
-                                'hnr': rfromadd,
+                                'hnr': rfromadd if rfromadd else rtoadd ,
                                 'lat': round(lat, 6),
                                 'lon': round(lon, 6),
                                 'street': name,
@@ -253,7 +253,7 @@ def addressways(waylist, nodelist, first_way_id):
                 else:
                     lat, lon = calculate_centroid(l_coordinates)
                     output.append({
-                                'hnr': lfromadd,
+                                'hnr': lfromadd if lfromadd else ltoadd,
                                 'lat': round(lat, 6),
                                 'lon': round(lon, 6),
                                 'street': name,
