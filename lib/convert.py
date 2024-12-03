@@ -16,6 +16,38 @@ ADDRESS_PULLBACK = 45
 # The approximate number of feet in one degree of latitude
 LAT_FEET = 364613
 
+# Helper Functions
+def interpolate_along_line(coordinates, from_hnr, to_hnr, hnr):
+    """Interpolates latitude and longitude for a given house number along a line."""
+    ratio = (hnr - from_hnr) / (to_hnr - from_hnr)
+    total_length = sum(dist(coordinates[i], coordinates[i + 1]) for i in range(len(coordinates) - 1))
+    target_length = ratio * total_length
+    current_length = 0
+
+    for i in range(len(coordinates) - 1):
+        segment_length = dist(coordinates[i], coordinates[i + 1])
+        if current_length + segment_length >= target_length:
+            segment_ratio = (target_length - current_length) / segment_length
+            lat = coordinates[i][0] + segment_ratio * (coordinates[i + 1][0] - coordinates[i][0])
+            lon = coordinates[i][1] + segment_ratio * (coordinates[i + 1][1] - coordinates[i][1])
+            return lat, lon
+        current_length += segment_length
+
+    return coordinates[-1]  # Fallback to the last point
+
+def should_include(hnr, interpolationtype):
+    """Checks if a house number should be included based on interpolation type."""
+    if interpolationtype == 'all':
+        return True
+    if interpolationtype == 'even' and hnr % 2 == 0:
+        return True
+    if interpolationtype == 'odd' and hnr % 2 != 0:
+        return True
+    return False
+
+def dist(p1, p2):
+    """Calculates the distance between two points."""
+    return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
 def addressways(waylist, nodelist, first_way_id):
     way_id = first_way_id
@@ -147,32 +179,42 @@ def addressways(waylist, nodelist, first_way_id):
 
             # Write the nodes of the offset ways
             if right:
+                # returns even, odd or all
                 interpolationtype = interpolation_type(rfromadd, rtoadd, lfromadd, ltoadd)
-
-                output.append({
-                    'from': rfromadd,
-                    'to': rtoadd,
-                    'interpolation': interpolationtype,
-                    'street': name,
-                    'city': county,
-                    'state': state,
-                    'postcode': zipr,
-                    'geometry': create_wkt_linestring(rsegment)
-                })
+                linestr = create_wkt_linestring(rsegment)
+                r_coordinates = [point[1] for point in rsegment]
+                for hnr in range(int(rfromadd), int(rtoadd) + 1):
+                    if should_include(hnr, interpolationtype):
+                        lat, lon = interpolate_along_line(r_coordinates, int(rfromadd), int(rtoadd), hnr)
+                        output.append({
+                            'hnr': hnr,
+                            'lat': round(lat, 6),
+                            'lon': round(lon, 6),
+                            'street': name,
+                            'city': county,
+                            'state': state,
+                            'postcode': zipr,
+                            'geometry': linestr
+                        })
 
             if left:
+                # returns even, odd or all
                 interpolationtype = interpolation_type(lfromadd, ltoadd, rfromadd, rtoadd)
-
-                output.append({
-                    'from': lfromadd,
-                    'to': ltoadd,
-                    'interpolation': interpolationtype,
-                    'street': name,
-                    'city': county,
-                    'state': state,
-                    'postcode': zipl,
-                    'geometry': create_wkt_linestring(lsegment)
-                })
+                linestr = create_wkt_linestring(lsegment)
+                l_coordinates = [point[1] for point in lsegment]
+                for hnr in range(int(lfromadd), int(ltoadd) + 1):
+                    if should_include(hnr, interpolationtype):
+                        lat, lon = interpolate_along_line(l_coordinates, int(lfromadd), int(ltoadd), hnr)
+                        output.append({
+                            'hnr': hnr,
+                            'lat': round(lat, 6),
+                            'lon': round(lon, 6),
+                            'street': name,
+                            'city': county,
+                            'state': state,
+                            'postcode': zipl,
+                            'geometry': linestr
+                        })
 
     return output
 
