@@ -98,6 +98,7 @@ def addressways(waylist, nodelist, first_way_id):
             left = check_if_integers([lfromadd, ltoadd])
 
             if not left and not right:
+                print(tags)
                 continue
 
             first = True
