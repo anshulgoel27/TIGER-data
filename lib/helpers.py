@@ -10,7 +10,7 @@ def parse_house_number(hnr):
       - "A10" -> ("A", 10, "")
       - "10" -> ("", 10, "")
     """
-    match = re.match(r"^(\D*)(\d+)(\D*)$", str(hnr))
+    match = re.match(r"^(\D*)(\d+)(\D*)$", str(hnr).strip())
     if match:
         prefix = match.group(1)
         numeric = int(match.group(2))
@@ -158,17 +158,13 @@ def interpolation_type(this_from, this_to, other_from, other_to):
     Check road side (e.g. left) and other side (right) if number range is 'even'
     or 'odd'. If in doubt 'all'.
     """
-    if not check_if_integers([this_from, this_to]):
-        return None
+    if (int(this_from) % 2) == 0 and (int(this_to) % 2) == 0:
+        if (int(other_from) % 2) == 1 and (int(other_to) % 2) == 1:
+            return "even"
 
-    if check_if_integers([other_from, other_to]):
-        if (int(this_from) % 2) == 0 and (int(this_to) % 2) == 0:
-            if (int(other_from) % 2) == 1 and (int(other_to) % 2) == 1:
-                return "even"
-
-        elif (int(this_from) % 2) == 1 and (int(this_to) % 2) == 1:
-            if (int(other_from) % 2) == 0 and (int(other_to) % 2) == 0:
-                return "odd"
+    elif (int(this_from) % 2) == 1 and (int(this_to) % 2) == 1:
+        if (int(other_from) % 2) == 0 and (int(other_to) % 2) == 0:
+            return "odd"
 
     return "all"
 

@@ -17,22 +17,9 @@ ADDRESS_PULLBACK = 45
 LAT_FEET = 364613
 
 # Helper Functions
-def interpolate_along_line_with_prefix_suffix(coordinates, from_hnr, to_hnr, hnr):
-    """
-    Interpolates latitude and longitude for house numbers with prefix/suffix.
-    """
-    prefix_from, numeric_from, suffix_from = parse_house_number(from_hnr)
-    prefix_to, numeric_to, suffix_to = parse_house_number(to_hnr)
-    prefix_hnr, numeric_hnr, suffix_hnr = parse_house_number(hnr)
-
-    if numeric_hnr is None or numeric_from is None or numeric_to is None:
-        raise ValueError("House number interpolation requires numeric components.")
-
-    # Ensure the prefix and suffix match for interpolation
-    if prefix_from != prefix_to or suffix_from != suffix_to:
-        raise ValueError("Mismatched prefixes or suffixes in house number interpolation.")
-
-    ratio = (numeric_hnr - numeric_from) / (numeric_to - numeric_from)
+def interpolate_along_line(coordinates, from_hnr, to_hnr, hnr):
+    """Interpolates latitude and longitude for a given house number along a line."""
+    ratio = (hnr - from_hnr) / (to_hnr - from_hnr)
     total_length = sum(dist(coordinates[i], coordinates[i + 1]) for i in range(len(coordinates) - 1))
     target_length = ratio * total_length
     current_length = 0
@@ -120,6 +107,12 @@ def addressways(waylist, nodelist, first_way_id):
 
             if not left and not right:
                 continue
+
+            # Parse house numbers once
+            parsed_lfromadd = parse_house_number(lfromadd)
+            parsed_ltoadd = parse_house_number(ltoadd)
+            parsed_rfromadd = parse_house_number(rfromadd)
+            parsed_rtoadd = parse_house_number(rtoadd)
 
             first = True
             firstpointid, firstpoint = nodelist[ round_point( segment[0] ) ]
@@ -221,49 +214,47 @@ def addressways(waylist, nodelist, first_way_id):
 
             # Write the nodes of the offset ways
             if right:
-                # returns even, odd or all
-                interpolationtype = interpolation_type(rfromadd, rtoadd, lfromadd, ltoadd)
+                interpolationtype = interpolation_type(parsed_rfromadd, parsed_rtoadd, parsed_lfromadd, parsed_ltoadd)
                 linestr = create_wkt_linestring(rsegment)
                 r_coordinates = [point[1] for point in rsegment]
                 if interpolationtype:
-                    for hnr in range(parse_house_number(rfromadd)[1], parse_house_number(rtoadd)[1] + 1):
-                        full_hnr = f"{parse_house_number(rfromadd)[0]}{hnr}{parse_house_number(rfromadd)[2]}"
+                    for hnr in range(parsed_rfromadd[1], parsed_rtoadd[1] + 1):
+                        full_hnr = f"{parsed_rfromadd[0]}{hnr}{parsed_rfromadd[2]}"
                         if should_include(full_hnr, interpolationtype):
-                            lat, lon = interpolate_along_line_with_prefix_suffix(
-                                r_coordinates, rfromadd, rtoadd, full_hnr
+                            lat, lon = interpolate_along_line(
+                                r_coordinates, parsed_rfromadd, parsed_rtoadd, hnr
                             )
                             output.append({
-                                'hnr': full_hnr,
-                                'lat': round(lat, 6),
-                                'lon': round(lon, 6),
-                                'street': name,
-                                'city': county,
-                                'state': state,
-                                'postcode': zipr,
-                                'geometry': linestr
+                                "hnr": full_hnr,
+                                "lat": round(lat, 6),
+                                "lon": round(lon, 6),
+                                "street": name,
+                                "city": county,
+                                "state": state,
+                                "postcode": zipr,
+                                "geometry": linestr,
                             })
 
             if left:
-                # returns even, odd or all
-                interpolationtype = interpolation_type(lfromadd, ltoadd, rfromadd, rtoadd)
+                interpolationtype = interpolation_type(parsed_lfromadd, parsed_ltoadd, parsed_rfromadd, parsed_rtoadd)
                 linestr = create_wkt_linestring(lsegment)
                 l_coordinates = [point[1] for point in lsegment]
                 if interpolationtype:
-                    for hnr in range(parse_house_number(lfromadd)[1], parse_house_number(ltoadd)[1] + 1):
-                        full_hnr = f"{parse_house_number(lfromadd)[0]}{hnr}{parse_house_number(lfromadd)[2]}"
+                    for hnr in range(parsed_lfromadd[1], parsed_ltoadd[1] + 1):
+                        full_hnr = f"{parsed_lfromadd[0]}{hnr}{parsed_lfromadd[2]}"
                         if should_include(full_hnr, interpolationtype):
-                            lat, lon = interpolate_along_line_with_prefix_suffix(
-                                l_coordinates, lfromadd, ltoadd, full_hnr
+                            lat, lon = interpolate_along_line(
+                                l_coordinates, parsed_lfromadd, parsed_ltoadd, hnr
                             )
                             output.append({
-                                'hnr': full_hnr,
-                                'lat': round(lat, 6),
-                                'lon': round(lon, 6),
-                                'street': name,
-                                'city': county,
-                                'state': state,
-                                'postcode': zipl,
-                                'geometry': linestr
+                                "hnr": full_hnr,
+                                "lat": round(lat, 6),
+                                "lon": round(lon, 6),
+                                "street": name,
+                                "city": county,
+                                "state": state,
+                                "postcode": zipl,
+                                "geometry": linestr,
                             })
 
     return output
