@@ -214,7 +214,7 @@ def addressways(waylist, nodelist, first_way_id):
 
             # Write the nodes of the offset ways
             if right:
-                interpolationtype = interpolation_type(parsed_rfromadd, parsed_rtoadd, parsed_lfromadd, parsed_ltoadd)
+                interpolationtype = interpolation_type(parsed_rfromadd[1], parsed_rtoadd[1], parsed_lfromadd[1], parsed_ltoadd[1])
                 linestr = create_wkt_linestring(rsegment)
                 r_coordinates = [point[1] for point in rsegment]
                 if interpolationtype:
@@ -222,7 +222,7 @@ def addressways(waylist, nodelist, first_way_id):
                         full_hnr = f"{parsed_rfromadd[0]}{hnr}{parsed_rfromadd[2]}"
                         if should_include(full_hnr, interpolationtype):
                             lat, lon = interpolate_along_line(
-                                r_coordinates, parsed_rfromadd, parsed_rtoadd, hnr
+                                r_coordinates, parsed_rfromadd[1], parsed_rtoadd[1], hnr
                             )
                             output.append({
                                 "hnr": full_hnr,
@@ -236,7 +236,7 @@ def addressways(waylist, nodelist, first_way_id):
                             })
 
             if left:
-                interpolationtype = interpolation_type(parsed_lfromadd, parsed_ltoadd, parsed_rfromadd, parsed_rtoadd)
+                interpolationtype = interpolation_type(parsed_lfromadd[1], parsed_ltoadd[1], parsed_rfromadd[1], parsed_rtoadd[1])
                 linestr = create_wkt_linestring(lsegment)
                 l_coordinates = [point[1] for point in lsegment]
                 if interpolationtype:
@@ -244,7 +244,7 @@ def addressways(waylist, nodelist, first_way_id):
                         full_hnr = f"{parsed_lfromadd[0]}{hnr}{parsed_lfromadd[2]}"
                         if should_include(full_hnr, interpolationtype):
                             lat, lon = interpolate_along_line(
-                                l_coordinates, parsed_lfromadd, parsed_ltoadd, hnr
+                                l_coordinates, parsed_lfromadd[1], parsed_ltoadd[1], hnr
                             )
                             output.append({
                                 "hnr": full_hnr,
