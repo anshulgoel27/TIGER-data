@@ -158,13 +158,17 @@ def interpolation_type(this_from, this_to, other_from, other_to):
     Check road side (e.g. left) and other side (right) if number range is 'even'
     or 'odd'. If in doubt 'all'.
     """
-    if (int(this_from) % 2) == 0 and (int(this_to) % 2) == 0:
-        if (int(other_from) % 2) == 1 and (int(other_to) % 2) == 1:
-            return "even"
+    if not this_from or not this_to:
+        return None
 
-    elif (int(this_from) % 2) == 1 and (int(this_to) % 2) == 1:
-        if (int(other_from) % 2) == 0 and (int(other_to) % 2) == 0:
-            return "odd"
+    if other_from and other_to:
+        if (int(this_from) % 2) == 0 and (int(this_to) % 2) == 0:
+            if (int(other_from) % 2) == 1 and (int(other_to) % 2) == 1:
+                return "even"
+
+        elif (int(this_from) % 2) == 1 and (int(this_to) % 2) == 1:
+            if (int(other_from) % 2) == 0 and (int(other_to) % 2) == 0:
+                return "odd"
 
     return "all"
 
