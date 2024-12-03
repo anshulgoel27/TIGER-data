@@ -218,7 +218,8 @@ def addressways(waylist, nodelist, first_way_id):
                 linestr = create_wkt_linestring(rsegment)
                 r_coordinates = [point[1] for point in rsegment]
                 if interpolationtype:
-                    for hnr in range(parsed_rfromadd[1], parsed_rtoadd[1] + 1):
+                    step = 1 if parsed_rfromadd[1] <= parsed_rtoadd[1] else -1
+                    for hnr in range(parsed_rfromadd[1], parsed_rtoadd[1] + 1, step):
                         full_hnr = f"{parsed_rfromadd[0]}{hnr}{parsed_rfromadd[2]}"
                         if should_include(full_hnr, interpolationtype):
                             lat, lon = interpolate_along_line(
@@ -240,6 +241,7 @@ def addressways(waylist, nodelist, first_way_id):
                 linestr = create_wkt_linestring(lsegment)
                 l_coordinates = [point[1] for point in lsegment]
                 if interpolationtype:
+                    step = 1 if parsed_lfromadd[1] <= parsed_ltoadd[1] else -1
                     for hnr in range(parsed_lfromadd[1], parsed_ltoadd[1] + 1):
                         full_hnr = f"{parsed_lfromadd[0]}{hnr}{parsed_lfromadd[2]}"
                         if should_include(full_hnr, interpolationtype):
