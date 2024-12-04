@@ -146,15 +146,5 @@ def get_tags_from_feature(po_feature, fips):
         if value is not None:
             tags[tag_name] = value
 
-
-    # offsets fields
-    offset_fields = {
-        "OFFSETL": "tiger:offset_left",
-        "OFFSETR": "tiger:offset_right",
-    }
-    for field, tag_name in offset_fields.items():
-        value = get_field_if_exists(po_feature, field)
-        if value is not None:
-            tags[tag_name] = value
     return tags
 
