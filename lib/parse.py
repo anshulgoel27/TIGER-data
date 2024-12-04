@@ -38,7 +38,7 @@ def extract_fips_code(filename):
         return match.group(1)  # Return the captured FIPS code
     return None  # No match found
 
-def parse_shp_for_geom_and_tags(filename):
+def parse_shp_for_geom_and_tags(filename, street):
     # ogr.RegisterAll()
 
     ogr_driver = ogr.GetDriverByName("ESRI Shapefile")
@@ -82,7 +82,6 @@ def get_geometry_from_feature(po_feature):
         geom.append( (rawgeom.GetX(i), rawgeom.GetY(i)) )
     return geom
 
-import re
 
 def get_field_if_exists(feature, field_name):
     """

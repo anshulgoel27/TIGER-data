@@ -213,6 +213,7 @@ def addressways(waylist, nodelist, first_way_id):
             name = tags.get("name", '')
             county = tags.get("tiger:county", '')
             state = tags.get("tiger:state", '')
+            id = tags.get("tiger:way_id", '')
 
             # Write the nodes of the offset ways
             if right:
@@ -228,6 +229,7 @@ def addressways(waylist, nodelist, first_way_id):
                                 r_coordinates, parsed_rfromadd[1], parsed_rtoadd[1], hnr
                             )
                             output.append({
+                                "id": id,
                                 "hnr": full_hnr,
                                 "lat": round(lat, 6),
                                 "lon": round(lon, 6),
@@ -255,6 +257,7 @@ def addressways(waylist, nodelist, first_way_id):
                                 l_coordinates, parsed_lfromadd[1], parsed_ltoadd[1], hnr
                             )
                             output.append({
+                                "id": id,
                                 "hnr": full_hnr,
                                 "lat": round(lat, 6),
                                 "lon": round(lon, 6),

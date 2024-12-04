@@ -4,17 +4,17 @@
 Input from STDIN is expected to be a CSV file with columns 'postcode' and
 'geometry'
 
-from;to;interpolation;street;city;state;postcode;geometry
-98;88;all;Sherman Rd;Putnam;NY;10541;LINESTRING(-73.790533 41.390289,-73.790590 41.390301,...
+street;city;state;postcode;geometry
+Sherman Rd;Putnam;NY;10541;LINESTRING(-73.790533 41.390289,-73.790590 41.390301,...
+Sherman Rd;Putnam;NY;10541;LINESTRING(-73.790533 41.390289,-73.790590 41.390301,...
+Trus Rd;Putnam;NY;10541;LINESTRING(-73.790533 41.390289,-73.790590 41.390301,...
 
-For each postcode a center point gets calculated.
+For each street a center point gets calculated.
 
 Output to STDOUT is one line per postcode
 
-postcode,lat,lon
-00535;43.089300;-72.613680
-00586;18.343681;-67.028427
-00601;18.181632;-66.757545
+street,lat,lon
+Sherman Rd;43.089300;-72.613680
 """
 from collections import defaultdict
 from statistics import mean, median
