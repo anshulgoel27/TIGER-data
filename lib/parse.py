@@ -126,7 +126,7 @@ def get_tags_from_feature(po_feature, fips):
     address_fields = [
         ("LFROMHN", "LFROMADD", "tiger:lfromadd"),
         ("RFROMHN", "RFROMADD", "tiger:rfromadd"),
-        ("LTOHN", "LTOHADD", "tiger:ltoadd"),
+        ("LTOHN", "LTOADD", "tiger:ltoadd"),
         ("RTOHN", "RTOADD", "tiger:rtoadd"),
     ]
     for primary, fallback, tag_name in address_fields:
