@@ -13,7 +13,7 @@ if [[ ! -d "$OUTPATH" ]]; then
     exit 1
 fi
 
-INREGEX='_([0-9]{5})_edges.zip'
+INREGEX='_([0-9]{5})_addrfeat.zip'
 WORKPATH="$OUTPATH/tmp-workdir/"
 mkdir -p "$WORKPATH"
 
@@ -24,12 +24,10 @@ echo "Found ${#INFILES[*]} files."
 NUMCPU=$(nproc)
 echo "Using $NUMCPU parallel processes."
 
+export INREGEX WORKPATH OUTPATH
+
 process_file() {
     local F=$1
-    local INREGEX='_([0-9]{5})_addrfeat.zip'
-    local WORKPATH="$OUTPATH/tmp-workdir/"
-    local OUTPATH="$2"
-
     if [[ "$F" =~ $INREGEX ]]; then
         local COUNTYID=${BASH_REMATCH[1]}
         local SHAPEFILE="$WORKPATH/$(basename "$F" '.zip').shp"
@@ -47,10 +45,9 @@ process_file() {
 }
 
 export -f process_file
-export OUTPATH
 
-# Use `parallel` with dynamic CPU count
-printf "%s\n" "${INFILES[@]}" | parallel -j "$NUMCPU" process_file {} "$OUTPATH"
+# Process files in parallel using xargs with dynamic CPU count
+printf "%s\n" "${INFILES[@]}" | xargs -n 1 -P "$NUMCPU" -I {} bash -c 'process_file "$@"' _ {}
 
 OUTFILES=($OUTPATH/*.csv)
 echo "Wrote ${#OUTFILES[*]} files."
