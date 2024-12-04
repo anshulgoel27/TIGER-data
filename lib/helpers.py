@@ -161,7 +161,7 @@ def interpolation_type(this_from, this_to):
     elif (int(this_from) % 2) == 0 and (int(this_to) % 2) == 0:
         return "even"
     else:
-        return None
+        return "all"
 
 
 def create_wkt_linestring(segment):
