@@ -6,11 +6,11 @@ from .helpers import parse_house_number, round_point, glom_all, length, check_if
 
 
 # Sets the distance that the address ways should be from the main way, in feet.
-ADDRESS_DISTANCE = 30
+ADDRESS_DISTANCE = 10
 
 # Sets the distance that the ends of the address ways should be pulled back
 # from the ends of the main way, in feet
-ADDRESS_PULLBACK = 45
+ADDRESS_PULLBACK = 20
 
 
 # The approximate number of feet in one degree of latitude
@@ -78,13 +78,28 @@ def dist(p1, p2):
     """Calculates the distance between two points."""
     return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
+def get_offset(tags):
+    offset_left = tags.get("tiger:offset_left")
+    offset_right = tags.get("tiger:offset_right")
+
+    if offset_left and offset_right:
+        return (offset_right + offset_left) / 2
+    elif offset_left and not offset_right:
+        return offset_left
+    elif offset_right and not offset_left:
+        return offset_right
+    
+    return ADDRESS_DISTANCE
+
 def addressways(waylist, nodelist, first_way_id):
     way_id = first_way_id
-    distance = float(ADDRESS_DISTANCE)
     output = []
 
     for tags, segments in waylist.items():
         tags = dict(tags)
+        
+        distance = get_offset(tags)
+        
         for segment in segments:
             lsegment = []
             rsegment = []
