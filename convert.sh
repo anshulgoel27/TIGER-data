@@ -21,7 +21,7 @@ INFILES=($INPATH/*.zip)
 echo "Found ${#INFILES[*]} files."
 
 # Determine the number of CPUs available
-NUMCPU=$(nproc)
+NUMCPU=$(( $(nproc) / 2 ))
 echo "Using $NUMCPU parallel processes."
 
 export INREGEX WORKPATH OUTPATH
