@@ -4,12 +4,12 @@ INPATH=$1
 OUTPATH=$2
 
 if [[ ! -d "$INPATH" ]]; then
-    echo "input path does not exist"
+    echo "Input path does not exist"
     exit 1
 fi
 
 if [[ ! -d "$OUTPATH" ]]; then
-    echo "output path does not exist"
+    echo "Output path does not exist"
     exit 1
 fi
 
@@ -17,18 +17,23 @@ INREGEX='_([0-9]{5})_edges.zip'
 WORKPATH="$OUTPATH/tmp-workdir/"
 mkdir -p "$WORKPATH"
 
-
-
 INFILES=($INPATH/*.zip)
 echo "Found ${#INFILES[*]} files."
 
-for F in ${INFILES[*]}; do
-    # echo $F
+# Determine the number of CPUs available
+NUMCPU=$(nproc)
+echo "Using $NUMCPU parallel processes."
+
+process_file() {
+    local F=$1
+    local INREGEX='_([0-9]{5})_edges.zip'
+    local WORKPATH="$OUTPATH/tmp-workdir/"
+    local OUTPATH="$2"
 
     if [[ "$F" =~ $INREGEX ]]; then
-        COUNTYID=${BASH_REMATCH[1]}
-        SHAPEFILE="$WORKPATH/$(basename $F '.zip').shp"
-        CSVFILE="$OUTPATH/$COUNTYID.csv"
+        local COUNTYID=${BASH_REMATCH[1]}
+        local SHAPEFILE="$WORKPATH/$(basename "$F" '.zip').shp"
+        local CSVFILE="$OUTPATH/$COUNTYID.csv"
 
         unzip -o -q -d "$WORKPATH" "$F"
         if [[ ! -e "$SHAPEFILE" ]]; then
@@ -37,12 +42,17 @@ for F in ${INFILES[*]}; do
         fi
 
         ./tiger_address_convert.py "$SHAPEFILE" "$CSVFILE"
-
-        rm $WORKPATH/*
+        rm "$WORKPATH"/*
     fi
-done
+}
+
+export -f process_file
+export OUTPATH
+
+# Use `parallel` with dynamic CPU count
+printf "%s\n" "${INFILES[@]}" | parallel -j "$NUMCPU" process_file {} "$OUTPATH"
 
 OUTFILES=($OUTPATH/*.csv)
 echo "Wrote ${#OUTFILES[*]} files."
 
-rmdir $WORKPATH
+rmdir "$WORKPATH"
