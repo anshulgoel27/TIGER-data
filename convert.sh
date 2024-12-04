@@ -17,7 +17,7 @@ INREGEX='_([0-9]{5})_addrfeat.zip'
 WORKPATH="$OUTPATH/tmp-workdir/"
 mkdir -p "$WORKPATH"
 
-INFILES=($INPATH/*.zip)
+INFILES=($INPATH/*addrfeat.zip)
 echo "Found ${#INFILES[*]} files."
 
 # Determine the number of CPUs available
