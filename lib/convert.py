@@ -218,7 +218,7 @@ def addressways(waylist, nodelist, first_way_id):
 
             # Write the nodes of the offset ways
             if right:
-                interpolationtype = interpolation_type(parsed_rfromadd[1], parsed_rtoadd[1], parsed_lfromadd[1], parsed_ltoadd[1])
+                interpolationtype = interpolation_type(parsed_rfromadd[1], parsed_rtoadd[1])
                 linestr = create_wkt_linestring(rsegment)
                 r_coordinates = [point[1] for point in rsegment]
                 if interpolationtype:
@@ -243,7 +243,7 @@ def addressways(waylist, nodelist, first_way_id):
                             })
 
             if left:
-                interpolationtype = interpolation_type(parsed_lfromadd[1], parsed_ltoadd[1], parsed_rfromadd[1], parsed_rtoadd[1])
+                interpolationtype = interpolation_type(parsed_lfromadd[1], parsed_ltoadd[1])
                 linestr = create_wkt_linestring(lsegment)
                 l_coordinates = [point[1] for point in lsegment]
                 if interpolationtype:

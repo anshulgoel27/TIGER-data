@@ -153,24 +153,16 @@ def check_if_integers(numbers):
 
     return True
 
-def interpolation_type(this_from, this_to, other_from, other_to):
-    """
-    Check road side (e.g. left) and other side (right) if number range is 'even'
-    or 'odd'. If in doubt 'all'.
-    """
+def interpolation_type(this_from, this_to):
     if this_from is None or this_to is None:
         return None
+    elif (int(this_from) % 2) == 1 and (int(this_to) % 2) == 1:
+        return "odd"
+    elif (int(this_from) % 2) == 0 and (int(this_to) % 2) == 0:
+        return "even"
+    else:
+        return None
 
-    if other_from is not None and other_to is not None:
-        if (int(this_from) % 2) == 0 and (int(this_to) % 2) == 0:
-            if (int(other_from) % 2) == 1 and (int(other_to) % 2) == 1:
-                return "even"
-
-        elif (int(this_from) % 2) == 1 and (int(this_to) % 2) == 1:
-            if (int(other_from) % 2) == 0 and (int(other_to) % 2) == 0:
-                return "odd"
-
-    return "all"
 
 def create_wkt_linestring(segment):
     """
