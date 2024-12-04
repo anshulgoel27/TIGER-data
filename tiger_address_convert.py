@@ -23,13 +23,10 @@ def shape_to_hnr_csv(shp_filename, csv_filename):
     print("parsing shpfile %s" % shp_filename)
     parsed_features = parse_shp_for_geom_and_tags(shp_filename)
 
-    print("compiling nodelist")
     i, nodelist = compile_nodelist(parsed_features)
 
-    print("compiling waylist")
     waylist = compile_waylist(parsed_features)
 
-    print("preparing address ways")
     csv_lines = addressways(waylist, nodelist, i)
 
     print("writing %s" % csv_filename)

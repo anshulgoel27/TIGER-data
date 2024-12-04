@@ -41,7 +41,7 @@ process_file() {
 
         ./tiger_address_convert.py "$SHAPEFILE" "$CSVFILE"
         local SHAPEFILE_ALL="$WORKPATH/$(basename "$F" '.zip').*"
-        rm -rf "$SHAPEFILE_ALL"
+        rm -rf $SHAPEFILE_ALL
     fi
 }
 
