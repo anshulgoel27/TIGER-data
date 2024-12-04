@@ -38,7 +38,7 @@ def extract_fips_code(filename):
         return match.group(1)  # Return the captured FIPS code
     return None  # No match found
 
-def parse_shp_for_geom_and_tags(filename, street):
+def parse_shp_for_geom_and_tags(filename):
     # ogr.RegisterAll()
 
     ogr_driver = ogr.GetDriverByName("ESRI Shapefile")
