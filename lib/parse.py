@@ -32,7 +32,7 @@ def extract_fips_code(filename):
     Returns:
         str: The extracted FIPS code, or None if no match is found.
     """
-    regex = r"tl_\d{4}_(\d{5})_(addrfeat|edges)\.zip"
+    regex = r"tl_\d{4}_(\d{5})_(addrfeat|edges)\.shp"
     match = re.search(regex, filename)
     if match:
         return match.group(1)  # Return the captured FIPS code
