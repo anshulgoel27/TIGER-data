@@ -142,7 +142,7 @@ def check_if_integers(numbers):
     Returns true if all members of lists are integers.
     """
     for number in numbers:
-        if not number:
+        if number is None:
             return False
         try:
             _, hnr, _ = parse_house_number(number)

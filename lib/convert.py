@@ -221,7 +221,7 @@ def addressways(waylist, nodelist, first_way_id):
                 linestr = create_wkt_linestring(rsegment)
                 r_coordinates = [point[1] for point in rsegment]
                 if interpolationtype:
-                    if interpolationtype == "odd":
+                    if interpolationtype == "all":
                         print("here {}", tags)
                         import sys
                         sys.exit(0)
@@ -250,7 +250,7 @@ def addressways(waylist, nodelist, first_way_id):
                 linestr = create_wkt_linestring(lsegment)
                 l_coordinates = [point[1] for point in lsegment]
                 if interpolationtype:
-                    if interpolationtype == "odd":
+                    if interpolationtype == "all":
                         print("here {}", tags)
                         import sys
                         sys.exit(0)
