@@ -82,68 +82,70 @@ def get_geometry_from_feature(po_feature):
         geom.append( (rawgeom.GetX(i), rawgeom.GetY(i)) )
     return geom
 
+import re
+
+def get_field_if_exists(feature, field_name):
+    """
+    Check if a field exists in an OGR feature and return its value if it does.
+
+    :param feature: OGR Feature object
+    :param field_name: Name of the field to check
+    :return: The field value if it exists, or None if the field does not exist
+    """
+    if feature.GetFieldIndex(field_name) != -1:
+        return feature.GetField(field_name)
+    return None
+
 def get_tags_from_feature(po_feature, fips):
+    """
+    Extract tags from a given feature and optional FIPS code.
+
+    :param po_feature: OGR Feature object
+    :param fips: FIPS code as a string
+    :return: Dictionary of tags
+    """
     tags = {}
 
-    tags["tiger:way_id"] = int( po_feature.GetField("TLID") )
+    # Mandatory tag
+    tags["tiger:way_id"] = int(get_field_if_exists(po_feature, "TLID"))
 
-    if po_feature.GetField("FULLNAME"):
-        tags["name"] = po_feature.GetField( "FULLNAME" )
+    # Optional name tag
+    fullname = get_field_if_exists(po_feature, "FULLNAME")
+    if fullname:
+        tags["name"] = fullname
 
-    if fips is not None:
+    # FIPS-based county and state
+    if fips:
         county_and_state = county_fips_data.get(fips)
-        if county_and_state: # e.g. 'Perquimans, NC'
-            result = re.match('^(.+), ([A-Z][A-Z])', county_and_state)
-            tags["tiger:county"] = result[1]
-            tags["tiger:state"] = result[2]
+        if county_and_state:  # Example: 'Perquimans, NC'
+            result = re.match(r'^(.+), ([A-Z]{2})$', county_and_state)
+            if result:
+                tags["tiger:county"] = result.group(1)
+                tags["tiger:state"] = result.group(2)
 
-    lfromadd = po_feature.GetField("LFROMHN")
-    if lfromadd is not None:
-        tags["tiger:lfromadd"] = lfromadd
-    else:
-        lfromadd = po_feature.GetField("LFROMADD")
-        if lfromadd is not None:
-            tags["tiger:lfromadd"] = lfromadd
+    # Address fields with fallback
+    address_fields = [
+        ("LFROMHN", "LFROMADD", "tiger:lfromadd"),
+        ("RFROMHN", "RFROMADD", "tiger:rfromadd"),
+        ("LTOHN", "LTOHADD", "tiger:ltoadd"),
+        ("RTOHN", "RTOADD", "tiger:rtoadd"),
+    ]
+    for primary, fallback, tag_name in address_fields:
+        value = get_field_if_exists(po_feature, primary) or get_field_if_exists(po_feature, fallback)
+        if value is not None:
+            tags[tag_name] = value
 
-    rfromadd = po_feature.GetField("RFROMHN")
-    if rfromadd is not None:
-        tags["tiger:rfromadd"] = rfromadd
-    else:
-        rfromadd = po_feature.GetField("RFROMADD")
-        if rfromadd is not None:
-            tags["tiger:rfromadd"] = rfromadd
-
-    ltoadd = po_feature.GetField("LTOHN")
-    if ltoadd is not None:
-        tags["tiger:ltoadd"] = ltoadd
-    else:
-        ltoadd = po_feature.GetField("LTOHADD")
-        if ltoadd is not None:
-            tags["tiger:ltoadd"] = ltoadd
-
-    rtoadd = po_feature.GetField("RTOHN")
-    if rtoadd is not None:
-        tags["tiger:rtoadd"] = rtoadd
-    else:
-        rtoadd = po_feature.GetField("RTOADD")
-        if rtoadd is not None:
-            tags["tiger:rtoadd"] = rtoadd
-
-    zipl = po_feature.GetField("ZIPL")
-    if zipl is not None:
-        tags["tiger:zip_left"] = zipl
-
-    zipr = po_feature.GetField("ZIPR")
-    if zipr is not None:
-        tags["tiger:zip_right"] = zipr
-
-
-    zip4l = po_feature.GetField("PLUS4L")
-    if zip4l is not None:
-        tags["tiger:zip4_left"] = zip4l
-
-    zip4r = po_feature.GetField("PLUS4R")
-    if zip4r is not None:
-        tags["tiger:zip4_right"] = zip4r
+    # ZIP fields
+    zip_fields = {
+        "ZIPL": "tiger:zip_left",
+        "ZIPR": "tiger:zip_right",
+        "PLUS4L": "tiger:zip4_left",
+        "PLUS4R": "tiger:zip4_right",
+    }
+    for field, tag_name in zip_fields.items():
+        value = get_field_if_exists(po_feature, field)
+        if value is not None:
+            tags[tag_name] = value
 
     return tags
+
