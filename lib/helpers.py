@@ -147,7 +147,7 @@ def check_if_integers(numbers):
         try:
             _, hnr, _ = parse_house_number(number)
             int(hnr)
-        except ValueError:
+        except:
             print("Non integer address: %s" % number)
             return False
 
