@@ -26,7 +26,7 @@ echo "Using $NUMCPU parallel processes."
 
 process_file() {
     local F=$1
-    local INREGEX='_([0-9]{5})_edges.zip'
+    local INREGEX='_([0-9]{5})_addrfeat.zip'
     local WORKPATH="$OUTPATH/tmp-workdir/"
     local OUTPATH="$2"
 

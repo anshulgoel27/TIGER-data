@@ -22,6 +22,22 @@ except ImportError:
 with open(os.path.dirname(__file__) + "/../tiger_county_fips.json", encoding="utf8") as json_file:
     county_fips_data = json.load(json_file)
 
+def extract_fips_code(filename):
+    """
+    Extract the 5-digit FIPS code from the file name.
+
+    Args:
+        filename (str): The file name to process.
+
+    Returns:
+        str: The extracted FIPS code, or None if no match is found.
+    """
+    regex = r"tl_\d{4}_(\d{5})_addrfeat\.zip"
+    match = re.match(regex, filename)
+    if match:
+        return match.group(1)  # Return the captured FIPS code
+    return None  # No match found
+
 def parse_shp_for_geom_and_tags(filename):
     # ogr.RegisterAll()
 
@@ -43,9 +59,14 @@ def parse_shp_for_geom_and_tags(filename):
 
     ret = []
 
+    fips = extract_fips_code(filename)
+    if fips is None:
+        print("Fips None for file {}", filename)
+        return ret
+    
     po_feature = po_layer.GetNextFeature()
     while po_feature:
-        tags = get_tags_from_feature(po_feature)
+        tags = get_tags_from_feature(po_feature, fips)
         geom = get_geometry_from_feature(po_feature)
 
         ret.append( (geom, tags) )
@@ -61,7 +82,7 @@ def get_geometry_from_feature(po_feature):
         geom.append( (rawgeom.GetX(i), rawgeom.GetY(i)) )
     return geom
 
-def get_tags_from_feature(po_feature):
+def get_tags_from_feature(po_feature, fips):
     tags = {}
 
     tags["tiger:way_id"] = int( po_feature.GetField("TLID") )
@@ -69,28 +90,26 @@ def get_tags_from_feature(po_feature):
     if po_feature.GetField("FULLNAME"):
         tags["name"] = po_feature.GetField( "FULLNAME" )
 
-    statefp = po_feature.GetField("STATEFP")
-    countyfp = po_feature.GetField("COUNTYFP")
-    if (statefp is not None) and (countyfp is not None):
-        county_and_state = county_fips_data.get(statefp + '' + countyfp)
+    if fips is not None:
+        county_and_state = county_fips_data.get(fips)
         if county_and_state: # e.g. 'Perquimans, NC'
             result = re.match('^(.+), ([A-Z][A-Z])', county_and_state)
             tags["tiger:county"] = result[1]
             tags["tiger:state"] = result[2]
 
-    lfromadd = po_feature.GetField("LFROMADD")
+    lfromadd = po_feature.GetField("LFROMHN")
     if lfromadd is not None:
         tags["tiger:lfromadd"] = lfromadd
 
-    rfromadd = po_feature.GetField("RFROMADD")
+    rfromadd = po_feature.GetField("RFROMHN")
     if rfromadd is not None:
         tags["tiger:rfromadd"] = rfromadd
 
-    ltoadd = po_feature.GetField("LTOADD")
+    ltoadd = po_feature.GetField("LTOHN")
     if ltoadd is not None:
         tags["tiger:ltoadd"] = ltoadd
 
-    rtoadd = po_feature.GetField("RTOADD")
+    rtoadd = po_feature.GetField("RTOHN")
     if rtoadd is not None:
         tags["tiger:rtoadd"] = rtoadd
 
@@ -101,5 +120,14 @@ def get_tags_from_feature(po_feature):
     zipr = po_feature.GetField("ZIPR")
     if zipr is not None:
         tags["tiger:zip_right"] = zipr
+
+
+    zip4l = po_feature.GetField("PLUS4L")
+    if zip4l is not None:
+        tags["tiger:zip4_left"] = zip4l
+
+    zip4r = po_feature.GetField("PLUS4R")
+    if zip4r is not None:
+        tags["tiger:zip4_right"] = zip4r
 
     return tags

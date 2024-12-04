@@ -16,7 +16,7 @@ import csv
 from lib.parse import parse_shp_for_geom_and_tags
 from lib.convert import addressways, compile_nodelist, compile_waylist
 
-def shape_to_csv(shp_filename, csv_filename):
+def shape_to_hnr_csv(shp_filename, csv_filename):
     """
     Main feature: reads a file, writes a file
     """
@@ -52,4 +52,4 @@ if len(sys.argv) < 3:
     print("%s input.shp output.csv" % sys.argv[0])
     sys.exit()
 
-shape_to_csv(sys.argv[1], sys.argv[2])
+shape_to_hnr_csv(sys.argv[1], sys.argv[2])
