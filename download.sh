@@ -12,5 +12,6 @@ fi
 lftp <<-SCRIPT
   open ftp2.census.gov
   mirror -e -n -r --parallel=20 --ignore-time /geo/tiger/TIGER2024/EDGES/ .
+  mirror -e -n -r --parallel=20 --ignore-time /geo/tiger/TIGER2024/ADDRFEAT/ .
   exit
 SCRIPT
