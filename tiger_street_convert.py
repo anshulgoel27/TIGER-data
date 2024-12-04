@@ -16,7 +16,7 @@ import csv
 from lib.parse import parse_shp_for_geom_and_tags
 from lib.convert import addressways, compile_nodelist, compile_waylist
 
-def shape_to_hnr_csv(shp_filename, csv_filename):
+def shape_to_street_csv(shp_filename, csv_filename):
     """
     Main feature: reads a file, writes a file
     """
@@ -34,15 +34,12 @@ def shape_to_hnr_csv(shp_filename, csv_filename):
 
     print("writing %s" % csv_filename)
     fieldnames = [
-        'hnr',
         'lat',
         'lon',
         'street',
         'city',
         'state',
-        'postcode',
-        'zip4',
-        'geometry'
+        'postcode'
     ]
     with open(csv_filename, 'w', encoding="utf8") as csv_file:
         csv_writer = csv.DictWriter(csv_file, delimiter=';', fieldnames=fieldnames)
@@ -53,4 +50,4 @@ if len(sys.argv) < 3:
     print("%s input.shp output.csv" % sys.argv[0])
     sys.exit()
 
-shape_to_hnr_csv(sys.argv[1], sys.argv[2])
+shape_to_street_csv(sys.argv[1], sys.argv[2])

@@ -32,8 +32,8 @@ def extract_fips_code(filename):
     Returns:
         str: The extracted FIPS code, or None if no match is found.
     """
-    regex = r"tl_\d{4}_(\d{5})_addrfeat\.zip"
-    match = re.match(regex, filename)
+    regex = r"tl_\d{4}_(\d{5})_[addrfeat|edges]\.zip"
+    match = re.search(regex, filename)
     if match:
         return match.group(1)  # Return the captured FIPS code
     return None  # No match found
@@ -100,18 +100,34 @@ def get_tags_from_feature(po_feature, fips):
     lfromadd = po_feature.GetField("LFROMHN")
     if lfromadd is not None:
         tags["tiger:lfromadd"] = lfromadd
+    else:
+        lfromadd = po_feature.GetField("LFROMADD")
+        if lfromadd is not None:
+            tags["tiger:lfromadd"] = lfromadd
 
     rfromadd = po_feature.GetField("RFROMHN")
     if rfromadd is not None:
         tags["tiger:rfromadd"] = rfromadd
+    else:
+        rfromadd = po_feature.GetField("RFROMADD")
+        if rfromadd is not None:
+            tags["tiger:rfromadd"] = rfromadd
 
     ltoadd = po_feature.GetField("LTOHN")
     if ltoadd is not None:
         tags["tiger:ltoadd"] = ltoadd
+    else:
+        ltoadd = po_feature.GetField("LTOHADD")
+        if ltoadd is not None:
+            tags["tiger:ltoadd"] = ltoadd
 
     rtoadd = po_feature.GetField("RTOHN")
     if rtoadd is not None:
         tags["tiger:rtoadd"] = rtoadd
+    else:
+        rtoadd = po_feature.GetField("RTOADD")
+        if rtoadd is not None:
+            tags["tiger:rtoadd"] = rtoadd
 
     zipl = po_feature.GetField("ZIPL")
     if zipl is not None:

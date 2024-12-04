@@ -208,6 +208,8 @@ def addressways(waylist, nodelist, first_way_id):
             # Generate the tags for ways and nodes
             zipr = tags.get("tiger:zip_right", '')
             zipl = tags.get("tiger:zip_left", '')
+            zip4r = tags.get("tiger:zip4_right", '')
+            zip4l = tags.get("tiger:zip4_left", '')
             name = tags.get("name", '')
             county = tags.get("tiger:county", '')
             state = tags.get("tiger:state", '')
@@ -233,6 +235,7 @@ def addressways(waylist, nodelist, first_way_id):
                                 "city": county,
                                 "state": state,
                                 "postcode": zipr,
+                                "zip4": zip4r,
                                 "geometry": linestr,
                             })
                 else:
@@ -259,6 +262,7 @@ def addressways(waylist, nodelist, first_way_id):
                                 "city": county,
                                 "state": state,
                                 "postcode": zipl,
+                                "zip4": zip4l,
                                 "geometry": linestr,
                             })
                 else:

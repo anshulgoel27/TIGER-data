@@ -13,11 +13,11 @@ if [[ ! -d "$OUTPATH" ]]; then
     exit 1
 fi
 
-INREGEX='_([0-9]{5})_addrfeat.zip'
+INREGEX='_([0-9]{5})_([addrfeat|edges]).zip'
 WORKPATH="$OUTPATH/tmp-workdir/"
 mkdir -p "$WORKPATH"
 
-INFILES=($INPATH/*addrfeat.zip)
+INFILES=($INPATH/*.zip)
 echo "Found ${#INFILES[*]} files."
 
 # Determine the number of CPUs available
@@ -29,7 +29,7 @@ export INREGEX WORKPATH OUTPATH
 process_file() {
     local F=$1
     if [[ "$F" =~ $INREGEX ]]; then
-        local COUNTYID=${BASH_REMATCH[1]}
+        local COUNTYID=${BASH_REMATCH[1]}_${BASH_REMATCH[2]}
         local SHAPEFILE="$WORKPATH/$(basename "$F" '.zip').shp"
         local CSVFILE="$OUTPATH/$COUNTYID.csv"
 
