@@ -13,7 +13,7 @@ if [[ ! -d "$OUTPATH" ]]; then
     exit 1
 fi
 
-INREGEX='_([0-9]{5})_([addrfeat|edges]).zip'
+INREGEX='_([0-9]{5})_(addrfeat|edges).zip'
 WORKPATH="$OUTPATH/tmp-workdir/"
 mkdir -p "$WORKPATH"
 
