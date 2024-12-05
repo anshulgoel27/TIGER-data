@@ -1,7 +1,7 @@
 
 import math
 
-from .project import unproject
+from .project import destroy_proj, unproject
 from .helpers import parse_house_number, round_point, glom_all, length, check_if_integers, interpolation_type, create_wkt_linestring
 
 
@@ -280,6 +280,7 @@ def compile_nodelist(parsed_gisdata):
                 nodelist[r_point] = (i, unproject(point))
                 i += 1
 
+    destroy_proj()
     return (i, nodelist)
 
 

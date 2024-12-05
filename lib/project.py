@@ -24,6 +24,12 @@ to_proj.SetWellKnownGeogCS("EPSG:4326")
 
 transformer = osr.CoordinateTransformation(from_proj, to_proj)
 
+def destroy_proj():
+    del transformer
+    del from_proj
+    del to_proj
+    
+
 def unproject(point):
     """Covert point to WGS84"""
     projected = transformer.TransformPoint(point[0], point[1])
