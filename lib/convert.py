@@ -1,9 +1,15 @@
 
 import math
 
-from .project import destroy_proj, unproject
+from .project import CoordinateTransformer
 from .helpers import parse_house_number, round_point, glom_all, length, check_if_integers, interpolation_type, create_wkt_linestring
 
+
+PROJCS_WKT = """GEOGCS["GCS_North_American_1983",
+        DATUM["D_North_American_1983",
+        SPHEROID["GRS_1980",6378137,298.257222101]],
+        PRIMEM["Greenwich",0],
+        UNIT["Degree",0.017453292519943295]]"""
 
 # Sets the distance that the address ways should be from the main way, in feet.
 ADDRESS_DISTANCE = 10
@@ -271,16 +277,15 @@ def addressways(waylist, nodelist, first_way_id):
 
 def compile_nodelist(parsed_gisdata):
     nodelist = {}
-
+    transformer = CoordinateTransformer(PROJCS_WKT)
     i = 1
     for geom, _tags in parsed_gisdata:
         for point in geom:
             r_point = round_point(point)
             if r_point not in nodelist:
-                nodelist[r_point] = (i, unproject(point))
+                nodelist[r_point] = (i, transformer.unproject(point))
                 i += 1
-
-    destroy_proj()
+    transformer.destroy()
     return (i, nodelist)
 
 

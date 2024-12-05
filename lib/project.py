@@ -1,36 +1,39 @@
-"""
-Deal with coordinate system transformations/projections
-"""
-
 try:
     from osgeo import osr
 except ImportError:
     import osr
 
-# Same as the contents of the *_edges.prj files
-PROJCS_WKT = \
-"""GEOGCS["GCS_North_American_1983",
-        DATUM["D_North_American_1983",
-        SPHEROID["GRS_1980",6378137,298.257222101]],
-        PRIMEM["Greenwich",0],
-        UNIT["Degree",0.017453292519943295]]"""
 
-from_proj = osr.SpatialReference()
-from_proj.ImportFromWkt(PROJCS_WKT)
+class CoordinateTransformer:
+    def __init__(self, source_wkt, target_epsg=4326):
+        """
+        Initialize the transformer with source WKT and target EPSG.
 
-# output to WGS84
-to_proj = osr.SpatialReference()
-to_proj.SetWellKnownGeogCS("EPSG:4326")
+        :param source_wkt: WKT of the source projection.
+        :param target_epsg: EPSG code of the target projection (default: WGS84).
+        """
+        self.source_proj = osr.SpatialReference()
+        self.source_proj.ImportFromWkt(source_wkt)
 
-transformer = osr.CoordinateTransformation(from_proj, to_proj)
+        self.target_proj = osr.SpatialReference()
+        self.target_proj.SetWellKnownGeogCS(f"EPSG:{target_epsg}")
 
-def destroy_proj():
-    del transformer
-    del from_proj
-    del to_proj
-    
+        self.transformer = osr.CoordinateTransformation(self.source_proj, self.target_proj)
 
-def unproject(point):
-    """Covert point to WGS84"""
-    projected = transformer.TransformPoint(point[0], point[1])
-    return (projected[0], projected[1])
+    def unproject(self, point):
+        """
+        Convert a point from the source projection to the target projection.
+
+        :param point: A tuple of (x, y) coordinates in the source projection.
+        :return: A tuple of (longitude, latitude) in the target projection.
+        """
+        projected = self.transformer.TransformPoint(point[0], point[1])
+        return (projected[0], projected[1])
+
+    def destroy(self):
+        """
+        Clean up the resources used by the transformer.
+        """
+        del self.transformer
+        del self.source_proj
+        del self.target_proj
