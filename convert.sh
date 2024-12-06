@@ -21,7 +21,7 @@ INFILES=($INPATH/*.zip)
 echo "Found ${#INFILES[*]} files."
 
 # Determine the number of CPUs available
-NUMCPU=$(( $(nproc) / 2 ))
+NUMCPU=2
 echo "Using $NUMCPU parallel processes."
 
 export INREGEX WORKPATH OUTPATH
@@ -39,7 +39,7 @@ process_file() {
             exit 1
         fi
 
-        ./tiger_address_convert.py "$SHAPEFILE" "$CSVFILE"
+        ./tiger_address_range_convert.py "$SHAPEFILE" "$CSVFILE"
         local SHAPEFILE_ALL="$WORKPATH/$(basename "$F" '.zip').*"
         rm -rf $SHAPEFILE_ALL
     fi

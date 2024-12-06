@@ -10,11 +10,13 @@ BUGS:
 - It would be nice if the ends of the address ways were not pulled back from dead ends
 """
 
+import os
 import sys
 import csv
 
 from lib.parse import parse_shp_for_geom_and_tags
 from lib.convert import addressways, compile_nodelist, compile_waylist
+from lib.zip_code_lookup import ZipCodeLookup
 
 def shape_to_hnr_csv(shp_filename, csv_filename):
     """
@@ -27,7 +29,11 @@ def shape_to_hnr_csv(shp_filename, csv_filename):
 
     waylist = compile_waylist(parsed_features)
 
-    csv_lines = addressways(waylist, nodelist, i)
+    current_file_dir = os.path.dirname(os.path.abspath(__file__))
+
+    zip_code_file = os.path.join(current_file_dir, "zip_db.csv")
+    
+    csv_lines = addressways(waylist, nodelist, i, ZipCodeLookup(zip_code_file), True)
 
     print("writing %s" % csv_filename)
     fieldnames = [

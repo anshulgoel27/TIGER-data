@@ -1,6 +1,8 @@
 
 import math
 
+from lib.zip_code_lookup import ZipCodeLookup
+
 from .project import CoordinateTransformer
 from .helpers import parse_house_number, round_point, glom_all, length, check_if_integers, interpolation_type, create_wkt_linestring
 
@@ -20,11 +22,26 @@ ADDRESS_PULLBACK = 20
 
 
 # The approximate number of feet in one degree of latitude
-LAT_FEET = 364613
+LAT_FEET = 364320
 
 # Helper Functions
 def interpolate_along_line(coordinates, from_hnr, to_hnr, hnr):
-    """Interpolates latitude and longitude for a given house number along a line."""
+    """
+    Interpolates latitude and longitude for a given house number along a line.
+    Fallback to the centroid of the line if interpolation fails.
+    """
+    if from_hnr == to_hnr:
+        return calculate_centroid(coordinates)
+
+    # Handle case where to_hnr < from_hnr
+    if to_hnr < from_hnr:
+        from_hnr, to_hnr = to_hnr, from_hnr
+
+    # Ensure hnr is within bounds
+    if hnr < from_hnr or hnr > to_hnr:
+        return calculate_centroid(coordinates)
+    
+
     ratio = (hnr - from_hnr) / (to_hnr - from_hnr)
     total_length = sum(dist(coordinates[i], coordinates[i + 1]) for i in range(len(coordinates) - 1))
     target_length = ratio * total_length
@@ -39,7 +56,7 @@ def interpolate_along_line(coordinates, from_hnr, to_hnr, hnr):
             return lat, lon
         current_length += segment_length
 
-    return coordinates[-1]  # Fallback to the last point
+    return calculate_centroid(coordinates)
 
 
 def should_include(hnr, interpolationtype):
@@ -59,32 +76,24 @@ def should_include(hnr, interpolationtype):
     return False
 
 
-def calculate_centroid(segment):
+def calculate_centroid(coordinates):
     """
-    Calculates the centroid of a line segment given its endpoints.
-
-    :param segment: A list of tuples (lat, lon) representing the segment's coordinates.
-    :return: (lat, lon) - the calculated centroid of the segment.
+    Calculate the centroid (geometric center) of a list of latitude and longitude points.
     """
-    if not segment or len(segment) < 2:
-        raise ValueError("Segment must contain at least two points to calculate centroid.")
+    if not coordinates:
+        raise ValueError("Coordinates list cannot be empty.")
 
-    # Get the first and last points of the segment
-    lat1, lon1 = segment[0]
-    lat2, lon2 = segment[-1]
-
-    # Calculate the centroid as the average of the endpoints
-    centroid_lat = (lat1 + lat2) / 2
-    centroid_lon = (lon1 + lon2) / 2
-
+    centroid_lat = sum(point[0] for point in coordinates) / len(coordinates)
+    centroid_lon = sum(point[1] for point in coordinates) / len(coordinates)
     return centroid_lat, centroid_lon
+
 
 
 def dist(p1, p2):
     """Calculates the distance between two points."""
     return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
-def addressways(waylist, nodelist, first_way_id):
+def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, compile_as_ranges: bool):
     way_id = first_way_id
     distance = ADDRESS_DISTANCE
     output = []
@@ -218,6 +227,15 @@ def addressways(waylist, nodelist, first_way_id):
             zip4r = tags.get("tiger:zip4_right", '')
             zip4l = tags.get("tiger:zip4_left", '')
             name = tags.get("name", '')
+            
+            cityr = zip_lookup.get_fallback_city(zipr)
+            if not cityr:
+                print(f"failed to lookup city for {zip4r}")
+            
+            cityl = zip_lookup.get_fallback_city(zipl)
+            if not cityl:
+                print(f"failed to lookup city for {zip4l}")
+                
             county = tags.get("tiger:county", '')
             state = tags.get("tiger:state", '')
             id = tags.get("tiger:way_id", '')
@@ -228,50 +246,86 @@ def addressways(waylist, nodelist, first_way_id):
                 linestr = create_wkt_linestring(rsegment)
                 r_coordinates = [point[1] for point in rsegment]
                 if interpolationtype:
-                    step = 1 if parsed_rfromadd[1] <= parsed_rtoadd[1] else -1
-                    for hnr in range(parsed_rfromadd[1], parsed_rtoadd[1] + 1, step):
-                        full_hnr = f"{parsed_rfromadd[0]}{hnr}{parsed_rfromadd[2]}".strip()
-                        if should_include(full_hnr, interpolationtype):
-                            lat, lon = interpolate_along_line(
-                                r_coordinates, parsed_rfromadd[1], parsed_rtoadd[1], hnr
-                            )
-                            output.append({
-                                "id": id,
-                                "hnr": full_hnr,
-                                "lat": round(lat, 6),
-                                "lon": round(lon, 6),
-                                "street": name,
-                                "city": county,
-                                "state": state,
-                                "postcode": zipr,
-                                "zip4": zip4r,
-                                "geometry": linestr,
-                            })
+                    if compile_as_ranges:
+                        lat, lon = calculate_centroid(r_coordinates)
+                        output.append({
+                                    "from": rfromadd,
+                                    "to": rtoadd,
+                                    "interpolation": interpolationtype,
+                                    "lat": round(lat, 6),
+                                    "lon": round(lon, 6),
+                                    "street": name,
+                                    "county": county,
+                                    "city": cityr,
+                                    "state": state,
+                                    "postcode": zipr,
+                                    "zip4": zip4r,
+                                    "geometry": linestr,
+                                })
+                    else:
+                        step = 1 if parsed_rfromadd[1] <= parsed_rtoadd[1] else -1
+                        for hnr in range(parsed_rfromadd[1], parsed_rtoadd[1] + 1, step):
+                            full_hnr = f"{parsed_rfromadd[0]}{hnr}{parsed_rfromadd[2]}".strip()
+                            if should_include(full_hnr, interpolationtype):
+                                lat, lon = interpolate_along_line(
+                                    r_coordinates, parsed_rfromadd[1], parsed_rtoadd[1], hnr
+                                )
+                                output.append({
+                                    "id": id,
+                                    "hnr": full_hnr,
+                                    "lat": round(lat, 6),
+                                    "lon": round(lon, 6),
+                                    "street": name,
+                                    "county": county,
+                                    "city": cityr,
+                                    "state": state,
+                                    "postcode": zipr,
+                                    "zip4": zip4r,
+                                    "geometry": linestr,
+                                })
 
             if left:
                 interpolationtype = interpolation_type(parsed_lfromadd[1], parsed_ltoadd[1])
                 linestr = create_wkt_linestring(lsegment)
                 l_coordinates = [point[1] for point in lsegment]
                 if interpolationtype:
-                    step = 1 if parsed_lfromadd[1] <= parsed_ltoadd[1] else -1
-                    for hnr in range(parsed_lfromadd[1], parsed_ltoadd[1] + 1):
-                        full_hnr = f"{parsed_lfromadd[0]}{hnr}{parsed_lfromadd[2]}"
-                        if should_include(full_hnr, interpolationtype):
-                            lat, lon = interpolate_along_line(
-                                l_coordinates, parsed_lfromadd[1], parsed_ltoadd[1], hnr
-                            )
-                            output.append({
-                                "id": id,
-                                "hnr": full_hnr,
-                                "lat": round(lat, 6),
-                                "lon": round(lon, 6),
-                                "street": name,
-                                "city": county,
-                                "state": state,
-                                "postcode": zipl,
-                                "zip4": zip4l,
-                                "geometry": linestr,
-                            })
+                    if compile_as_ranges:
+                        lat, lon = calculate_centroid(l_coordinates)
+                        output.append({
+                                    "from": lfromadd,
+                                    "to": ltoadd,
+                                    "interpolation": interpolationtype,
+                                    "lat": round(lat, 6),
+                                    "lon": round(lon, 6),
+                                    "street": name,
+                                    "county": county,
+                                    "city": cityl,
+                                    "state": state,
+                                    "postcode": zipl,
+                                    "zip4": zip4l,
+                                    "geometry": linestr,
+                                })
+                    else:
+                        step = 1 if parsed_lfromadd[1] <= parsed_ltoadd[1] else -1
+                        for hnr in range(parsed_lfromadd[1], parsed_ltoadd[1] + 1):
+                            full_hnr = f"{parsed_lfromadd[0]}{hnr}{parsed_lfromadd[2]}"
+                            if should_include(full_hnr, interpolationtype):
+                                lat, lon = interpolate_along_line(
+                                    l_coordinates, parsed_lfromadd[1], parsed_ltoadd[1], hnr
+                                )
+                                output.append({
+                                    "id": id,
+                                    "hnr": full_hnr,
+                                    "lat": round(lat, 6),
+                                    "lon": round(lon, 6),
+                                    "street": name,
+                                    "county": county,
+                                    "city": cityl,
+                                    "state": state,
+                                    "postcode": zipl,
+                                    "zip4": zip4l,
+                                    "geometry": linestr,
+                                })
 
     return output
 
