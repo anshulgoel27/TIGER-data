@@ -43,7 +43,7 @@ for row in reader:
     if not street:
         continue
 
-    street = f"{street};{row['city']}:{row['state']}:{row['postcode']}"
+    street = f"{street}:{row['county']}:{row['state']}:{row['postcode']}".lower()
     # If you 'cat *.csv' then you might end up with multiple CSV header lines.
     # Skip those
     if row['geometry'] == 'geometry':
@@ -56,7 +56,7 @@ for row in reader:
     assert result
 
     points = result[1].split(',')
-    street_summary[street.lower()].append([float(p) for p in points[int(len(points)/2)].split(' ')])
+    street_summary[street].append([float(p) for p in points[int(len(points)/2)].split(' ')])
 
     cnt += 1
 
@@ -66,7 +66,7 @@ for row in reader:
 LOG.warning("%s lines read.", cnt)
 
 writer = csv.DictWriter(sys.stdout, delimiter=',',
-                        fieldnames=['street','lat', 'lon'],
+                        fieldnames=['street', 'lat', 'lon', 'county', 'state', 'postcode'],
                         lineterminator='\n')
 writer.writeheader()
 
@@ -89,11 +89,16 @@ for street in sorted(street_summary):
 
         centroid = [mean(p) for p in zip(*points)]
 
-        writer.writerow({
-            'street': street,
-            'lat': round(centroid[1], 6),
-            'lon': round(centroid[0], 6)
-        })
+        split = str(street).split(":")
+        if len(split) == 4:
+            writer.writerow({
+                'street': split[0],
+                'lat': round(centroid[1], 6),
+                'lon': round(centroid[0], 6),
+                'county': split[1],
+                'state': split[2],
+                'postcode': split[3]
+            })
         break
     else:
         LOG.warning("%s: Dropped.", street)
