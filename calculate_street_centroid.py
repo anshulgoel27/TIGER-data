@@ -14,10 +14,13 @@ LOG.setLevel(logging.WARNING)
 def dist(p1, p2):
     return sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
-def process_file(input_file):
+def process_file(input_file, output_dir):
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+
     # Generate the output file name
-    base_name, _ = os.path.splitext(input_file)
-    output_file = f"{base_name}_streets.csv"
+    base_name = os.path.splitext(os.path.basename(input_file))[0]
+    output_file = os.path.join(output_dir, f"{base_name}_streets.csv")
 
     street_summary = defaultdict(list)
 
@@ -89,6 +92,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Process street geometries from a CSV file.")
     parser.add_argument('input_file', help="Input CSV file path")
+    parser.add_argument('output_dir', help="Output directory path")
     args = parser.parse_args()
 
-    process_file(args.input_file)
+    process_file(args.input_file, args.output_dir)
