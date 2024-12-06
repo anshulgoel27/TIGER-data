@@ -230,10 +230,12 @@ def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, comp
 
             cityr = zip_lookup.get_fallback_city(zipr)
             if not cityr:
+                print(tags)
                 print(f"failed to lookup city for {zipr}")
             
             cityl = zip_lookup.get_fallback_city(zipl)
             if not cityl:
+                print(tags)
                 print(f"failed to lookup city for {zipl}")
                 
             county = tags.get("tiger:county", '')
