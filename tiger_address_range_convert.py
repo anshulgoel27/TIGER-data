@@ -48,7 +48,8 @@ def shape_to_range_csv(shp_filename, csv_filename):
         'state',
         'postcode',
         'zip4',
-        'geometry'
+        'geometry',
+        'way'
     ]
     with open(csv_filename, 'w', encoding="utf8") as csv_file:
         csv_writer = csv.DictWriter(csv_file, delimiter=';', fieldnames=fieldnames)

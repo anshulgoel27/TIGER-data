@@ -249,6 +249,7 @@ def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, comp
                 r_coordinates = [point[1] for point in rsegment]
                 if interpolationtype:
                     if compile_as_ranges:
+                        way = 'F' if parsed_rfromadd[1] <= parsed_rtoadd[1] else 'R'
                         lat, lon = calculate_centroid(r_coordinates)
                         output.append({
                                     "from": rfromadd,
@@ -263,6 +264,7 @@ def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, comp
                                     "postcode": zipr,
                                     "zip4": zip4r,
                                     "geometry": linestr,
+                                    "way": way
                                 })
                     else:
                         step = 1 if parsed_rfromadd[1] <= parsed_rtoadd[1] else -1
@@ -292,6 +294,7 @@ def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, comp
                 l_coordinates = [point[1] for point in lsegment]
                 if interpolationtype:
                     if compile_as_ranges:
+                        way = 'F' if parsed_lfromadd[1] <= parsed_ltoadd[1] else 'R'
                         lat, lon = calculate_centroid(l_coordinates)
                         output.append({
                                     "from": lfromadd,
@@ -306,6 +309,7 @@ def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, comp
                                     "postcode": zipl,
                                     "zip4": zip4l,
                                     "geometry": linestr,
+                                    "way": way
                                 })
                     else:
                         step = 1 if parsed_lfromadd[1] <= parsed_ltoadd[1] else -1
