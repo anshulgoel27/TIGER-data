@@ -227,14 +227,14 @@ def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, comp
             zip4r = tags.get("tiger:zip4_right", '')
             zip4l = tags.get("tiger:zip4_left", '')
             name = tags.get("name", '')
-            
+
             cityr = zip_lookup.get_fallback_city(zipr)
             if not cityr:
-                print(f"failed to lookup city for {zip4r}")
+                print(f"failed to lookup city for {zipr}")
             
             cityl = zip_lookup.get_fallback_city(zipl)
             if not cityl:
-                print(f"failed to lookup city for {zip4l}")
+                print(f"failed to lookup city for {zipl}")
                 
             county = tags.get("tiger:county", '')
             state = tags.get("tiger:state", '')
