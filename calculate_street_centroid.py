@@ -1,104 +1,94 @@
 #!/usr/bin/env python3
 
-"""
-Input from STDIN is expected to be a CSV file with columns 'postcode' and
-'geometry'
-
-street;city;state;postcode;geometry
-Sherman Rd;Putnam;NY;10541;LINESTRING(-73.790533 41.390289,-73.790590 41.390301,...
-Sherman Rd;Putnam;NY;10541;LINESTRING(-73.790533 41.390289,-73.790590 41.390301,...
-Trus Rd;Putnam;NY;10541;LINESTRING(-73.790533 41.390289,-73.790590 41.390301,...
-
-For each street a center point gets calculated.
-
-Output to STDOUT is one line per postcode
-
-street,lat,lon
-Sherman Rd;43.089300;-72.613680
-"""
 from collections import defaultdict
 from statistics import mean, median
 from math import sqrt
-import sys
 import csv
 import re
 import logging
+import os
 
 LOG = logging.getLogger()
-
-street_summary = defaultdict(list)
-
-reader = csv.DictReader(sys.stdin, delimiter=';')
+LOG.setLevel(logging.WARNING)
 
 def dist(p1, p2):
-    return sqrt((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)
+    return sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
-LOG.warning("Reading Streets")
+def process_file(input_file):
+    # Generate the output file name
+    base_name, _ = os.path.splitext(input_file)
+    output_file = f"{base_name}_streets.csv"
 
-cnt = 0
-for row in reader:
+    street_summary = defaultdict(list)
 
-    street = row['street']
+    with open(input_file, mode='r', newline='') as infile:
+        reader = csv.DictReader(infile, delimiter=';')
+        
+        LOG.warning("Reading Streets")
+        cnt = 0
+        for row in reader:
+            street = row['street']
+            if not street:
+                continue
 
-    if not street:
-        continue
+            street = f"{street}:{row['county']}:{row['state']}:{row['postcode']}".lower()
+            if row['geometry'] == 'geometry':  # Skip header lines if present in the middle of the file
+                continue
 
-    street = f"{street}:{row['county']}:{row['state']}:{row['postcode']}".lower()
-    # If you 'cat *.csv' then you might end up with multiple CSV header lines.
-    # Skip those
-    if row['geometry'] == 'geometry':
-        continue
+            result = re.match(r'LINESTRING\((.+)\)$', row['geometry'])
+            assert result, f"Invalid geometry format: {row['geometry']}"
 
-    result = re.match(r'LINESTRING\((.+)\)$', row['geometry'])
+            points = result[1].split(',')
+            street_summary[street].append([float(p) for p in points[int(len(points) / 2)].split(' ')])
 
-    # Fail if geometry can't be parsed. Shouldn't happen because it's one of
-    # our scripts that created them.
-    assert result
+            cnt += 1
+            if cnt % 1000000 == 0:
+                LOG.warning("Processed %s lines.", cnt)
 
-    points = result[1].split(',')
-    street_summary[street].append([float(p) for p in points[int(len(points)/2)].split(' ')])
+        LOG.warning("%s lines read.", cnt)
 
-    cnt += 1
+    maxdists = [0.1, 0.3, 0.5, 0.9]
+    with open(output_file, mode='w', newline='') as outfile:
+        writer = csv.DictWriter(outfile, delimiter=',',
+                                fieldnames=['street', 'lat', 'lon', 'county', 'state', 'postcode'],
+                                lineterminator='\n')
+        writer.writeheader()
 
-    if cnt % 1000000 == 0:
-        LOG.warning("Processed %s lines.", cnt)
+        for street in sorted(street_summary):
+            points = street_summary[street]
+            centroid = [median(p) for p in zip(*points)]
 
-LOG.warning("%s lines read.", cnt)
+            for mxd in maxdists:
+                filtered = [p for p in points if dist(centroid, p) < mxd]
+                if len(filtered) < 0.7 * len(points):
+                    continue
 
-writer = csv.DictWriter(sys.stdout, delimiter=',',
-                        fieldnames=['street', 'lat', 'lon', 'county', 'state', 'postcode'],
-                        lineterminator='\n')
-writer.writeheader()
+                if len(filtered) < len(points):
+                    LOG.warning("%s: Found %d outliers in %d points.", street, -len(filtered) + len(points), len(points))
+                    points = filtered
 
-maxdists = [0.1, 0.3, 0.5, 0.9]
+                centroid = [mean(p) for p in zip(*points)]
+                split = str(street).split(":")
+                if len(split) == 4:
+                    writer.writerow({
+                        'street': split[0],
+                        'lat': round(centroid[1], 6),
+                        'lon': round(centroid[0], 6),
+                        'county': split[1],
+                        'state': split[2],
+                        'postcode': split[3]
+                    })
+                break
+            else:
+                LOG.warning("%s: Dropped.", street)
 
-for street in sorted(street_summary):
-    points = street_summary[street]
+    LOG.warning("Output written to %s", output_file)
 
-    centroid = [median(p) for p in zip(*points)]
+if __name__ == "__main__":
+    import argparse
 
-    for mxd in maxdists:
-        filtered = [p for p in points if dist(centroid, p) < mxd]
+    parser = argparse.ArgumentParser(description="Process street geometries from a CSV file.")
+    parser.add_argument('input_file', help="Input CSV file path")
+    args = parser.parse_args()
 
-        if len(filtered) < 0.7 * len(points):
-            continue
-
-        if len(filtered) < len(points):
-            LOG.warning("%s: Found %d outliers in %d points.", street, - len(filtered) + len(points), len(points))
-            points = filtered
-
-        centroid = [mean(p) for p in zip(*points)]
-
-        split = str(street).split(":")
-        if len(split) == 4:
-            writer.writerow({
-                'street': split[0],
-                'lat': round(centroid[1], 6),
-                'lon': round(centroid[0], 6),
-                'county': split[1],
-                'state': split[2],
-                'postcode': split[3]
-            })
-        break
-    else:
-        LOG.warning("%s: Dropped.", street)
+    process_file(args.input_file)
