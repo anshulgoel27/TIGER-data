@@ -40,7 +40,7 @@ def shape_to_range_csv(shp_filename, csv_filename):
         'from',
         'to',
         "interpolation",
-        'lat'
+        'lat',
         'lon',
         'street',
         'county',
