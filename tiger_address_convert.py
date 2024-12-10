@@ -18,6 +18,21 @@ from lib.parse import parse_shp_for_geom_and_tags
 from lib.convert import addressways, compile_nodelist, compile_waylist
 from lib.zip_code_lookup import ZipCodeLookup
 
+def write_to_csv(file_name, generator, headers):
+    """
+    Write results from a generator to a CSV file.
+    
+    Parameters:
+    - file_name: The CSV file to write to.
+    - generator: A generator yielding rows of data (as dictionaries).
+    - headers: A list of column headers for the CSV file.
+    """
+    with open(file_name, mode='w', encoding='utf-8') as csvfile:
+        writer = csv.DictWriter(csvfile, delimiter=';', fieldnames=headers)
+        writer.writeheader()
+        for row in generator:
+            writer.writerow(row)
+
 def shape_to_hnr_csv(shp_filename, csv_filename):
     """
     Main feature: reads a file, writes a file
@@ -25,7 +40,7 @@ def shape_to_hnr_csv(shp_filename, csv_filename):
     print("parsing shpfile %s" % shp_filename)
     parsed_features = parse_shp_for_geom_and_tags(shp_filename)
 
-    i, nodelist = compile_nodelist(parsed_features)
+    i , nodelist = compile_nodelist(parsed_features)
 
     waylist = compile_waylist(parsed_features)
 
@@ -33,8 +48,6 @@ def shape_to_hnr_csv(shp_filename, csv_filename):
 
     zip_code_file = os.path.join(current_file_dir, "zip_db.csv")
     
-    csv_lines = addressways(waylist, nodelist, i, ZipCodeLookup(zip_code_file), True)
-
     print("writing %s" % csv_filename)
     fieldnames = [
         'id',
@@ -48,10 +61,8 @@ def shape_to_hnr_csv(shp_filename, csv_filename):
         'zip4',
         'geometry'
     ]
-    with open(csv_filename, 'w', encoding="utf8") as csv_file:
-        csv_writer = csv.DictWriter(csv_file, delimiter=';', fieldnames=fieldnames)
-        csv_writer.writeheader()
-        csv_writer.writerows(csv_lines)
+
+    write_to_csv(csv_filename, addressways(waylist, nodelist, i, zip_code_file, False), fieldnames)
 
 if len(sys.argv) < 3:
     print("%s input.shp output.csv" % sys.argv[0])

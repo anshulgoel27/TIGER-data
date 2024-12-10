@@ -242,6 +242,7 @@ def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, comp
             state = tags.get("tiger:state", '')
             id = tags.get("tiger:way_id", '')
 
+            addrs = []
             # Write the nodes of the offset ways
             if right:
                 interpolationtype = interpolation_type(parsed_rfromadd[1], parsed_rtoadd[1])
@@ -319,7 +320,7 @@ def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, comp
                                 lat, lon = interpolate_along_line(
                                     l_coordinates, parsed_lfromadd[1], parsed_ltoadd[1], hnr
                                 )
-                                output.append({
+                                addrs.append({
                                     "id": id,
                                     "hnr": full_hnr,
                                     "lat": round(lat, 6),
@@ -332,8 +333,12 @@ def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, comp
                                     "zip4": zip4l,
                                     "geometry": linestr,
                                 })
-
-    return output
+            
+            if not compile_as_ranges:
+                yield addrs
+                
+    if compile_as_ranges:
+        return output
 
 def compile_nodelist(parsed_gisdata):
     nodelist = {}
