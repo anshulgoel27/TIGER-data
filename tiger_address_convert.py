@@ -30,8 +30,9 @@ def write_to_csv(file_name, generator, headers):
     with open(file_name, mode='w', encoding='utf-8') as csvfile:
         writer = csv.DictWriter(csvfile, delimiter=';', fieldnames=headers)
         writer.writeheader()
-        for row in generator:
-            writer.writerow(row)
+        for rows in generator:
+            for row in rows:
+                writer.writerow(row)
 
 def shape_to_hnr_csv(shp_filename, csv_filename):
     """
