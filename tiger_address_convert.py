@@ -51,11 +51,11 @@ def shape_to_hnr_csv(shp_filename, csv_filename):
     
     print("writing %s" % csv_filename)
     fieldnames = [
-        'id',
         'hnr',
         'lat',
         'lon',
         'street',
+        'county',
         'city',
         'state',
         'postcode',

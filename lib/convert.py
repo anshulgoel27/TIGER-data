@@ -276,7 +276,6 @@ def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, comp
                                     r_coordinates, parsed_rfromadd[1], parsed_rtoadd[1], hnr
                                 )
                                 output.append({
-                                    "id": id,
                                     "hnr": full_hnr,
                                     "lat": round(lat, 6),
                                     "lon": round(lon, 6),
@@ -321,7 +320,6 @@ def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, comp
                                     l_coordinates, parsed_lfromadd[1], parsed_ltoadd[1], hnr
                                 )
                                 addrs.append({
-                                    "id": id,
                                     "hnr": full_hnr,
                                     "lat": round(lat, 6),
                                     "lon": round(lon, 6),
@@ -336,7 +334,7 @@ def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, comp
             
             if not compile_as_ranges:
                 yield addrs
-                
+
     if compile_as_ranges:
         return output
 
