@@ -246,10 +246,10 @@ def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, comp
             # Write the nodes of the offset ways
             if right:
                 interpolationtype = interpolation_type(parsed_rfromadd[1], parsed_rtoadd[1])
-                linestr = create_wkt_linestring(rsegment)
                 r_coordinates = [point[1] for point in rsegment]
                 if interpolationtype:
                     if compile_as_ranges:
+                        linestr = create_wkt_linestring(rsegment)
                         way = 'F' if parsed_rfromadd[1] <= parsed_rtoadd[1] else 'R'
                         lat, lon = calculate_centroid(r_coordinates)
                         output.append({
@@ -285,15 +285,14 @@ def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, comp
                                     "state": state,
                                     "postcode": zipr,
                                     "zip4": zip4r,
-                                    "geometry": linestr,
                                 })
 
             if left:
                 interpolationtype = interpolation_type(parsed_lfromadd[1], parsed_ltoadd[1])
-                linestr = create_wkt_linestring(lsegment)
                 l_coordinates = [point[1] for point in lsegment]
                 if interpolationtype:
                     if compile_as_ranges:
+                        linestr = create_wkt_linestring(lsegment)
                         way = 'F' if parsed_lfromadd[1] <= parsed_ltoadd[1] else 'R'
                         lat, lon = calculate_centroid(l_coordinates)
                         output.append({
@@ -329,7 +328,6 @@ def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, comp
                                     "state": state,
                                     "postcode": zipl,
                                     "zip4": zip4l,
-                                    "geometry": linestr,
                                 })
             
             if not compile_as_ranges:
