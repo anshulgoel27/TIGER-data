@@ -62,7 +62,7 @@ def shape_to_hnr_csv(shp_filename, csv_filename):
         'geometry'
     ]
 
-    write_to_csv(csv_filename, addressways(waylist, nodelist, i, zip_code_file, False), fieldnames)
+    write_to_csv(csv_filename, addressways(waylist, nodelist, i, ZipCodeLookup(zip_code_file), False), fieldnames)
 
 if len(sys.argv) < 3:
     print("%s input.shp output.csv" % sys.argv[0])
