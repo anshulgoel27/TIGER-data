@@ -275,7 +275,7 @@ def addressways(waylist, nodelist, first_way_id, zip_lookup: ZipCodeLookup, comp
                                 lat, lon = interpolate_along_line(
                                     r_coordinates, parsed_rfromadd[1], parsed_rtoadd[1], hnr
                                 )
-                                output.append({
+                                addrs.append({
                                     "hnr": full_hnr,
                                     "lat": round(lat, 6),
                                     "lon": round(lon, 6),
