@@ -31,8 +31,7 @@ def write_to_csv(file_name, generator, headers):
         writer = csv.DictWriter(csvfile, delimiter=';', fieldnames=headers)
         writer.writeheader()
         for rows in generator:
-            for row in rows:
-                writer.writerow(row)
+            writer.writerow(rows)
 
 def shape_to_hnr_csv(shp_filename, csv_filename):
     """
