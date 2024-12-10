@@ -60,7 +60,6 @@ def shape_to_hnr_csv(shp_filename, csv_filename):
         'state',
         'postcode',
         'zip4',
-        'geometry'
     ]
 
     write_to_csv(csv_filename, addressways(waylist, nodelist, i, ZipCodeLookup(zip_code_file), False), fieldnames)
