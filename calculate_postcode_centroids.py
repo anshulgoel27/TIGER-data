@@ -78,11 +78,11 @@ def process_file(input_file, output_dir):
                 split = str(postcode).split(":")
                 if len(split) == 3:
                     writer.writerow({
-                        'lat': round(centroid[1], 6),
-                        'lon': round(centroid[0], 6),
+                        'postcode': split[2],
                         'county': split[0],
                         'state': split[1],
-                        'postcode': split[2]
+                        'lat': round(centroid[1], 6),
+                        'lon': round(centroid[0], 6)
                     })
                 break
             else:
