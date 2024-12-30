@@ -38,7 +38,7 @@ def process_file(input_file, output_dir):
             if not re.match(r'^\d\d\d\d\d$', postcode):
                 continue
 
-            postcode = f"{row['county']}:{row['state']}:{postcode}".lower()
+            postcode = f"{row['city']}:{row['county']}:{row['state']}:{postcode}".lower()
             if row['geometry'] == 'geometry':  # Skip header lines if present in the middle of the file
                 continue
 
@@ -57,7 +57,7 @@ def process_file(input_file, output_dir):
     maxdists = [0.1, 0.3, 0.5, 0.9]
     with open(output_file, mode='w', newline='') as outfile:
         writer = csv.DictWriter(outfile, delimiter=',',
-                                fieldnames=['postcode', 'county', 'state', 'lat', 'lon'],
+                                fieldnames=['postcode', 'city', 'county', 'state', 'lat', 'lon'],
                                 lineterminator='\n')
         writer.writeheader()
 
@@ -78,9 +78,10 @@ def process_file(input_file, output_dir):
                 split = str(postcode).split(":")
                 if len(split) == 3:
                     writer.writerow({
-                        'postcode': split[2],
-                        'county': split[0],
-                        'state': split[1],
+                        'postcode': split[3],
+                        'city': split[0],
+                        'county': split[1],
+                        'state': split[2],
                         'lat': round(centroid[1], 6),
                         'lon': round(centroid[0], 6)
                     })
