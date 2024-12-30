@@ -76,7 +76,7 @@ def process_file(input_file, output_dir):
 
                 centroid = [mean(p) for p in zip(*points)]
                 split = str(postcode).split(":")
-                if len(split) == 4:
+                if len(split) == 3:
                     writer.writerow({
                         'lat': round(centroid[1], 6),
                         'lon': round(centroid[0], 6),
