@@ -76,7 +76,7 @@ def process_file(input_file, output_dir):
 
                 centroid = [mean(p) for p in zip(*points)]
                 split = str(postcode).split(":")
-                if len(split) == 3:
+                if len(split) == 4:
                     writer.writerow({
                         'postcode': split[3],
                         'city': split[0],
