@@ -57,7 +57,7 @@ def process_file(input_file, output_dir):
     maxdists = [0.1, 0.3, 0.5, 0.9]
     with open(output_file, mode='w', newline='') as outfile:
         writer = csv.DictWriter(outfile, delimiter=',',
-                                fieldnames=['lat', 'lon', 'county', 'state', 'postcode'],
+                                fieldnames=['postcode', 'county', 'state', 'lat', 'lon'],
                                 lineterminator='\n')
         writer.writeheader()
 
